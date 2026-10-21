@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import VcfWorkspace from "./VcfWorkspace";
+import FeedbackBar from "./FeedbackBar";
 
 export interface FAQItem {
   q: string;
@@ -85,6 +86,10 @@ export default function Landing({ badge, h1, subtitle, steps, faqs }: LandingPro
         </div>
 
         <VcfWorkspace />
+
+        <div className="mt-6">
+          <FeedbackBar toolName="VCF & CSV Contact Converter" theme="dark" />
+        </div>
 
         <section className="mt-16 border-t border-slate-900 pt-12">
           <h2 className="text-xl font-bold text-white">

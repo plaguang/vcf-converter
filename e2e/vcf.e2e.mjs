@@ -110,6 +110,13 @@ function assert(cond, msg) {
     `Split multi-contact vCard into valid .ZIP archive (${zipBuf.length} bytes)`
   );
 
+  // 6b. 测试页面底部 FeedbackBar 用户评价与反馈提交
+  await page.getByTestId("feedback-up-btn").click();
+  await page.getByTestId("feedback-comment-input").fill("Works great for iCloud VCF to Excel!");
+  await page.getByTestId("feedback-submit-btn").click();
+  const fbThanks = await page.getByTestId("feedback-thanks").textContent();
+  assert(Boolean(fbThanks?.includes("Thank you!")), `FeedbackBar submitted ("${fbThanks?.trim()}")`);
+
   // 7. 巡检全部 4 个 SEO 路由 + sitemap.xml + robots.txt
   for (const r of [
     "/",

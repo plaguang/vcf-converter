@@ -562,14 +562,14 @@ export default function VcfWorkspace() {
       {/* 顶部工具栏：上传、预设、去重与多格式导出 */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-800 bg-slate-900/90 p-4 shadow-lg">
         <div className="flex flex-wrap items-center gap-2.5">
-          <label className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-xs font-bold text-slate-950 shadow-md shadow-emerald-500/20 transition hover:bg-emerald-400">
-            📂 Open .VCF or .CSV Files (Multi-File Merge Supported)
+          <label className="relative cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-xs font-bold text-slate-950 shadow-md shadow-emerald-500/20 transition hover:bg-emerald-400 active:scale-[0.99]">
+            <span className="pointer-events-none">📂 Open .VCF or .CSV Files (Multi-File Merge Supported)</span>
             <input
               data-testid="vcf-file-input"
               type="file"
               multiple
               accept=".vcf,.vcard,.csv,.tsv,text/vcard,text/csv"
-              className="hidden"
+              className="sr-only"
               onChange={(e) => handleFileUpload(e.target.files)}
             />
           </label>
