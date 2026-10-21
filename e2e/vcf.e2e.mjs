@@ -80,6 +80,10 @@ function assert(cond, msg) {
     buffer: sampleCsvBuffer,
   });
 
+  await page.waitForFunction(
+    () => document.querySelector('[data-testid="contact-count-badge"]')?.textContent?.includes("2 / 2"),
+    { timeout: 5000 }
+  );
   const badgeCsv = await page.getByTestId("contact-count-badge").textContent();
   assert(badgeCsv?.includes("2 / 2"), `Uploaded CSV file parsed into 2 contacts (${badgeCsv})`);
 
