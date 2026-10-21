@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const BASE = process.env.NEXT_PUBLIC_SITE_URL || "https://vcf-converter.vercel.app";
+const BASE = process.env.NEXT_PUBLIC_SITE_URL || "https://vcf-converter-three.vercel.app";
 
 export default function robots(): MetadataRoute.Robots {
   return {
