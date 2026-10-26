@@ -239,9 +239,11 @@ export function serializeToVcf(contacts: ContactItem[], version: "3.0" | "4.0" =
     .join("\r\n");
 }
 
+const csvCell = (s: string) => `"${(s || "").replace(/"/g, '""')}"`;
+
 // 序列化联系人数组为 Google Contacts / Outlook 兼容的 RFC-4180 CSV
 export function serializeToCsv(contacts: ContactItem[]): string {
-  const q = (s: string) => `"${(s || "").replace(/"/g, '""')}"`;
+  const q = csvCell;
   const header = [
     "Full Name",
     "First Name",
@@ -495,19 +497,94 @@ export default function VcfWorkspace() {
     setContacts((prev) => prev.filter((c) => c.id !== id));
   }
 
-  function handleExportCsv() {
-    const csvStr = serializeToCsv(filteredContacts);
+  function handleExportCsv(preset: "standard" | "google" | "outlook" = "standard") {
+    let csvStr = "";
+    if (preset === "google") {
+      const headers = [
+        "Name",
+        "Given Name",
+        "Family Name",
+        "Organization 1 - Name",
+        "Organization 1 - Title",
+        "Phone 1 - Type",
+        "Phone 1 - Value",
+        "E-mail 1 - Type",
+        "E-mail 1 - Value",
+        "Address 1 - Formatted",
+        "Notes",
+      ];
+      const rows = filteredContacts.map((c) =>
+        [
+          csvCell(c.fullName),
+          csvCell(c.firstName),
+          csvCell(c.lastName),
+          csvCell(c.organization),
+          csvCell(c.title),
+          csvCell("Mobile"),
+          csvCell(c.phone),
+          csvCell("Work"),
+          csvCell(c.email),
+          csvCell(c.address),
+          csvCell(c.note),
+        ].join(",")
+      );
+      csvStr = "\uFEFF" + [headers.join(","), ...rows].join("\r\n");
+    } else if (preset === "outlook") {
+      const headers = [
+        "First Name",
+        "Last Name",
+        "Company",
+        "Job Title",
+        "Mobile Phone",
+        "E-mail Address",
+        "Business Street",
+        "Notes",
+      ];
+      const rows = filteredContacts.map((c) =>
+        [
+          csvCell(c.firstName || c.fullName),
+          csvCell(c.lastName),
+          csvCell(c.organization),
+          csvCell(c.title),
+          csvCell(c.phone),
+          csvCell(c.email),
+          csvCell(c.address),
+          csvCell(c.note),
+        ].join(",")
+      );
+      csvStr = "\uFEFF" + [headers.join(","), ...rows].join("\r\n");
+    } else {
+      csvStr = serializeToCsv(filteredContacts);
+    }
+
     const blob = new Blob([csvStr], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `contacts-${filteredContacts.length}.csv`;
+    a.download = `contacts-${preset}-${filteredContacts.length}.csv`;
     document.body.appendChild(a);
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 3000);
-    setStatusBanner(`Exported ${filteredContacts.length} contact(s) to CSV for Excel / Google Contacts!`);
-    trackEvent("vcf_export_csv", { count: filteredContacts.length });
+    setStatusBanner(
+      `Exported ${filteredContacts.length} contact(s) to ${preset.toUpperCase()} CSV format!`
+    );
+    trackEvent("vcf_export_csv", { count: filteredContacts.length, preset });
+  }
+
+  function handleExportJson() {
+    const jsonStr = JSON.stringify(filteredContacts, null, 2);
+    const blob = new Blob([jsonStr], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `contacts-${filteredContacts.length}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 3000);
+    setStatusBanner(`Exported ${filteredContacts.length} contact(s) to structured .JSON!`);
+    trackEvent("vcf_export_json", { count: filteredContacts.length });
   }
 
   function handleExportVcf() {
@@ -559,21 +636,39 @@ export default function VcfWorkspace() {
 
   return (
     <div className="space-y-5">
-      {/* 顶部工具栏：上传、预设、去重与多格式导出 */}
+      {/* 大尺寸拖拽/点击上传区：解决桌面与移动端访客首屏不知往哪拖文件的问题 */}
+      <label
+        data-testid="vcf-dropzone-card"
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          e.preventDefault();
+          if (e.dataTransfer.files?.length) handleFileUpload(e.dataTransfer.files);
+        }}
+        className="relative flex cursor-pointer flex-col items-center justify-center gap-2.5 rounded-2xl border-2 border-dashed border-emerald-500/40 bg-slate-900/80 p-6 text-center shadow-lg transition hover:border-emerald-400 hover:bg-slate-900 active:scale-[0.99]"
+      >
+        <input
+          data-testid="vcf-file-input"
+          type="file"
+          multiple
+          accept=".vcf,.vcard,.csv,.tsv,text/vcard,text/csv"
+          className="sr-only"
+          onChange={(e) => handleFileUpload(e.target.files)}
+        />
+        <span className="pointer-events-none text-3xl">📇</span>
+        <span className="pointer-events-none text-base font-bold text-white sm:text-lg">
+          Drop one or multiple .VCF / .vCard or .CSV contact files here
+        </span>
+        <span className="pointer-events-none inline-flex items-center gap-1.5 rounded-xl bg-emerald-500 px-4 py-2 text-xs font-bold text-slate-950 shadow-md shadow-emerald-500/20">
+          📂 Tap or Click Here to Select .VCF / .CSV Files (Multi-File Merge Supported)
+        </span>
+        <span className="pointer-events-none text-xs text-slate-400">
+          100% Client-Side Processing · Supports vCard 2.1 (Quoted-Printable), 3.0 &amp; 4.0 · Zero Server Upload
+        </span>
+      </label>
+
+      {/* 顶部工具栏：预设、去重与多格式导出 */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-800 bg-slate-900/90 p-4 shadow-lg">
         <div className="flex flex-wrap items-center gap-2.5">
-          <label className="relative cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-xs font-bold text-slate-950 shadow-md shadow-emerald-500/20 transition hover:bg-emerald-400 active:scale-[0.99]">
-            <span className="pointer-events-none">📂 Open .VCF or .CSV Files (Multi-File Merge Supported)</span>
-            <input
-              data-testid="vcf-file-input"
-              type="file"
-              multiple
-              accept=".vcf,.vcard,.csv,.tsv,text/vcard,text/csv"
-              className="sr-only"
-              onChange={(e) => handleFileUpload(e.target.files)}
-            />
-          </label>
-
           <button
             type="button"
             data-testid="load-sample-vcf"
@@ -597,10 +692,37 @@ export default function VcfWorkspace() {
           <button
             type="button"
             data-testid="export-csv-btn"
-            onClick={handleExportCsv}
+            onClick={() => handleExportCsv("standard")}
             className="rounded-xl bg-emerald-500 px-3.5 py-2 text-xs font-bold text-slate-950 shadow transition hover:bg-emerald-400"
           >
-            ⬇ Export to .CSV (Excel / Google)
+            ⬇ Export Excel .CSV
+          </button>
+
+          <button
+            type="button"
+            data-testid="export-google-csv-btn"
+            onClick={() => handleExportCsv("google")}
+            className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-500/20"
+          >
+            ⬇ Google Contacts .CSV
+          </button>
+
+          <button
+            type="button"
+            data-testid="export-outlook-csv-btn"
+            onClick={() => handleExportCsv("outlook")}
+            className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-500/20"
+          >
+            ⬇ Outlook .CSV
+          </button>
+
+          <button
+            type="button"
+            data-testid="export-json-btn"
+            onClick={handleExportJson}
+            className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:bg-slate-800"
+          >
+            {`{ } Export .JSON`}
           </button>
 
           <div className="flex items-center rounded-xl border border-slate-700 bg-slate-950 p-0.5">

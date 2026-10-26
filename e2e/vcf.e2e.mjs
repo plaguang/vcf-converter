@@ -58,7 +58,7 @@ function assert(cond, msg) {
     `Deduplicate button removes duplicate phone/email entry (${badge3})`
   );
 
-  // 4. 导出为 CSV 并校验表头与内容
+  // 4. 导出为 CSV 并校验表头与内容 + Google Contacts CSV + JSON 导出
   const [csvDownload] = await Promise.all([
     page.waitForEvent("download", { timeout: 15000 }),
     page.getByTestId("export-csv-btn").click(),
@@ -67,6 +67,27 @@ function assert(cond, msg) {
   assert(
     csvText.includes("Full Name,First Name,Last Name") && csvText.includes("marcus.vance@apexcloud.io"),
     `Exported VCF contacts to valid CSV (${csvDownload.suggestedFilename()}, ${csvText.length} chars)`
+  );
+
+  const [googleCsvDl] = await Promise.all([
+    page.waitForEvent("download", { timeout: 15000 }),
+    page.getByTestId("export-google-csv-btn").click(),
+  ]);
+  const googleCsvText = fs.readFileSync(await googleCsvDl.path(), "utf8");
+  assert(
+    googleCsvText.includes("Given Name,Family Name,Organization 1 - Name") &&
+      googleCsvText.includes("marcus.vance@apexcloud.io"),
+    `Exported Google Contacts preset CSV (${googleCsvDl.suggestedFilename()})`
+  );
+
+  const [jsonDl] = await Promise.all([
+    page.waitForEvent("download", { timeout: 15000 }),
+    page.getByTestId("export-json-btn").click(),
+  ]);
+  const jsonParsed = JSON.parse(fs.readFileSync(await jsonDl.path(), "utf8"));
+  assert(
+    Array.isArray(jsonParsed) && jsonParsed.length === 3 && jsonParsed[0].fullName === "Marcus Vance",
+    `Exported structured .JSON contacts (${jsonParsed.length} contacts)`
   );
 
   // 5. 上传 CSV 通讯录文件并导出为合并的 vCard 3.0 (.VCF)
