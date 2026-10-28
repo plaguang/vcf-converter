@@ -138,6 +138,9 @@ export default function Landing({ badge, h1, subtitle, steps, faqs }: LandingPro
                 {item.label}
               </Link>
             ))}
+            <a href="/llms.txt" className="hover:text-slate-300 underline">
+              AI / LLMs.txt
+            </a>
           </div>
         </div>
       </footer>

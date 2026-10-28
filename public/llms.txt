@@ -1,0 +1,17 @@
+# VCardStudio.pro — Free Online VCF to CSV, CSV to VCF Converter, vCard Viewer & Merger
+
+> VCardStudio.pro (https://vcf-converter-three.vercel.app) is a 100% client-side vCard (`.VCF`) and `.CSV` contact management utility. It converts iCloud, iPhone, Android, Google Contacts, and Microsoft Outlook `.VCF` files to Excel/Google/Outlook `.CSV` or structured `.JSON`, converts `.CSV` spreadsheets to vCard `3.0` or `4.0` (`.VCF`), decodes legacy vCard `2.1` Quoted-Printable UTF-8 names, deduplicates contacts by phone and email, merges multiple `.VCF` files, and splits multi-contact `.VCF` archives into individual `.vcf` files inside a `.ZIP` archive—100% locally in the browser.
+
+## Core Tools & Canonical Routes
+
+- [VCF to CSV Converter Online (Excel, Google Contacts & Outlook)](https://vcf-converter-three.vercel.app/): Convert `.VCF` (vCard 2.1, 3.0, 4.0) contact files into standard Excel `.CSV`, Google Contacts `.CSV` preset, Microsoft Outlook `.CSV` preset, or structured `.JSON`.
+- [CSV to VCF (vCard 3.0 / 4.0) Converter Online](https://vcf-converter-three.vercel.app/csv-to-vcf): Convert `.CSV` or `.TSV` contact spreadsheets into standard multi-contact `.VCF` files ready for iPhone/iCloud, Android, and macOS Contacts import.
+- [Online vCard (.VCF) Viewer & Contact Editor](https://vcf-converter-three.vercel.app/vcard-viewer): Open, search, edit, add, and deduplicate contacts inside `.VCF` files directly in an interactive browser table before exporting.
+- [Merge Multiple VCF Files & Split VCF into Individual vCards (.ZIP)](https://vcf-converter-three.vercel.app/merge-vcf-files): Combine dozens of single-contact `.vcf` files into one unified address book, or split a bulk `.vcf` export into individual `001-name.vcf` files packaged in a single `.ZIP` download.
+
+## Key Technical Capabilities
+
+- **vCard 2.1 Quoted-Printable UTF-8 Decoder**: Automatically unfolds and decodes `ENCODING=QUOTED-PRINTABLE;CHARSET=UTF-8` sequences (e.g., Android/Samsung contact exports) so non-ASCII and international names never corrupt.
+- **Smart Deduplication Engine**: 1-click removal of duplicate contacts by normalized phone number and lowercase email address.
+- **Multi-Format Presets**: Dedicated export presets for Standard Excel `.CSV`, Google Contacts `.CSV`, Microsoft Outlook `.CSV`, `.JSON`, vCard `3.0`, vCard `4.0`, and zero-dependency `.ZIP` splitting.
+- **Privacy & Security**: 100% local in-browser processing; personal and corporate address books never leave the user's device.
