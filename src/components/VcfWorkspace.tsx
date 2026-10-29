@@ -399,6 +399,8 @@ export default function VcfWorkspace() {
   const [searchQuery, setSearchQuery] = useState("");
   const [vcfVersion, setVcfVersion] = useState<"3.0" | "4.0">("3.0");
   const [statusBanner, setStatusBanner] = useState<string | null>(null);
+  const [showPasteBox, setShowPasteBox] = useState(false);
+  const [pasteText, setPasteText] = useState("");
 
   const filteredContacts = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -442,6 +444,18 @@ export default function VcfWorkspace() {
       `Loaded Sample iCloud & Android vCard Archive (${parsed.length} contacts including 1 duplicate)!`
     );
     trackEvent("vcf_sample_loaded");
+  }
+
+  function handleParsePastedText() {
+    const raw = pasteText.trim();
+    if (!raw) return;
+    const parsed = /BEGIN:VCARD/i.test(raw) ? parseVcfText(raw) : parseCsvContacts(raw);
+    if (parsed.length > 0) {
+      setContacts(parsed);
+      setShowPasteBox(false);
+      setStatusBanner(`Parsed ${parsed.length} contact(s) from pasted text locally in browser!`);
+      trackEvent("vcf_pasted_parsed", { contacts: parsed.length });
+    }
   }
 
   function handleDeduplicate() {
@@ -686,6 +700,15 @@ export default function VcfWorkspace() {
           >
             🧹 Remove Duplicate Contacts
           </button>
+
+          <button
+            type="button"
+            data-testid="toggle-paste-vcf-btn"
+            onClick={() => setShowPasteBox((v) => !v)}
+            className="rounded-xl border border-sky-500/40 bg-sky-500/15 px-3.5 py-2 text-xs font-semibold text-sky-300 transition hover:bg-sky-500/25"
+          >
+            📋 Paste Raw .VCF / .CSV Text
+          </button>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -755,6 +778,32 @@ export default function VcfWorkspace() {
           </button>
         </div>
       </div>
+
+      {showPasteBox && (
+        <div className="rounded-2xl border border-sky-500/40 bg-slate-900/95 p-4 shadow-lg space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="text-xs font-bold text-sky-300">
+              📋 Paste Raw vCard (`BEGIN:VCARD ... END:VCARD`) or CSV Contact Text Below (Ideal for Mobile / Clipboard Copy)
+            </span>
+            <button
+              type="button"
+              data-testid="parse-paste-vcf-btn"
+              onClick={handleParsePastedText}
+              className="rounded-xl bg-sky-500 px-3.5 py-1.5 text-xs font-bold text-slate-950 transition hover:bg-sky-400"
+            >
+              ⚡ Parse Pasted Text Now
+            </button>
+          </div>
+          <textarea
+            data-testid="paste-vcf-textarea"
+            rows={5}
+            value={pasteText}
+            onChange={(e) => setPasteText(e.target.value)}
+            placeholder={"BEGIN:VCARD\nVERSION:3.0\nFN:Jane Doe\nTEL:+1-555-0199\nEMAIL:jane@example.com\nEND:VCARD"}
+            className="w-full rounded-xl border border-slate-700 bg-slate-950 p-3 font-mono text-xs text-slate-100 placeholder:text-slate-500"
+          />
+        </div>
+      )}
 
       {statusBanner && (
         <div

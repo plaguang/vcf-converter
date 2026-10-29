@@ -131,7 +131,16 @@ function assert(cond, msg) {
     `Split multi-contact vCard into valid .ZIP archive (${zipBuf.length} bytes)`
   );
 
-  // 6b. 测试页面底部 FeedbackBar 用户评价与反馈提交
+  // 6b. 测试 Paste Raw .VCF / .CSV Text 剪贴板解析功能
+  await page.getByTestId("toggle-paste-vcf-btn").click();
+  await page
+    .getByTestId("paste-vcf-textarea")
+    .fill("BEGIN:VCARD\nVERSION:3.0\nFN:Pasted Mobile Contact\nTEL:+1-415-999-8888\nEMAIL:pasted@mobile.dev\nEND:VCARD");
+  await page.getByTestId("parse-paste-vcf-btn").click();
+  const badgePasted = await page.getByTestId("contact-count-badge").textContent();
+  assert(badgePasted?.includes("1 / 1"), `Pasted raw vCard text parsed into 1 contact (${badgePasted})`);
+
+  // 6c. 测试页面底部 FeedbackBar 用户评价与反馈提交
   await page.getByTestId("feedback-up-btn").click();
   await page.getByTestId("feedback-comment-input").fill("Works great for iCloud VCF to Excel!");
   await page.getByTestId("feedback-submit-btn").click();
